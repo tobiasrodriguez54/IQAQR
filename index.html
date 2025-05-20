@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>IQA QR Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bwip-js/dist/bwip-js-min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0; background-color: #00274d; color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            width: 90%; max-width: 600px; background: #fff; padding: 20px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 20px; color: #333;
+        }
+        h1 { text-align: center; color: #00274d; }
+        input, button, textarea {
+            width: 100%;
+            padding: 10px; margin: 10px 0;
+            border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        textarea {resize: vertical;}
+        input:focus, textarea:focus { border-color: #007bff; outline: none; }
+        button { background-color: #007bff; color: white; cursor: pointer; border: none; transition: background-color 0.3s; }
+        button:hover { background-color: #0056b3; }
+        .toggle-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .toggle-group { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #00274d; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { display:none; }
+        .slider { position: absolute; cursor: pointer; top:0;left:0;right:0;bottom:0; background-color:#ccc; transition:.4s; border-radius:20px; }
+        .slider:before { position:absolute; content:""; height:16px;width:16px;left:2px;bottom:2px; background-color:white; transition:.4s; border-radius:50%; }
+        input:checked + .slider { background-color:#007bff; }
+        input:checked + .slider:before { transform:translateX(20px); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IQA QR Generator</h1>
+         <div class="toggle-row">
+            <div class="toggle-group">
+			<!-- COMENTADO PARA OCULTAR PANTHER
+                <span>Panther</span>
+                <label class="switch">
+                    <input type="checkbox" id="engineToggle" onchange="toggleEngineInputs();">
+                    <span class="slider round"></span>
+                </label> -->
+                <span>Lion</span>
+            </div>
+        </div>
+        <div id="qrSection">
+            <div style="display: flex; align-items: center;">
+                <span>[)>&#x1e;06&#x1d;1T</span>
+                <input type="text" id="serialNumberInput" 
+                       placeholder="Enter serial number suffix (16 characters)"
+                       maxlength="16" style="flex: 1; margin-bottom:10px;"/>
+                <span id="faFbWrapper" style="margin-left: 10px;">
+                    <select id="faFbSelect">
+                        <option value="FA">FA</option>
+                        <option value="FB" selected>FB</option>
+                    </select>
+                </span>
+                <br>
+            </div>
+            <textarea id="segmentInput" rows="10" placeholder="Paste segment data here"></textarea>
+            <button onclick="generateQRCode()">Generate Data Matrix</button>
+            <div id="qrCodeResult" style="margin-top:15px;"></div>
+        </div>
+    </div>
+    <script>
+        function toggleEngineInputs() {
+            const isLion = document.getElementById('engineToggle').checked;
+            document.getElementById('faFbWrapper').style.display = isLion ? '' : 'none';
+        }
+        
+        function parseSegments(rawText, expectedLines) {
+            // Split lines and trim each
+            let lines = rawText.split('\n').map(line => line.trim()).filter(line => line);
+            // Remove first/last
+            if (lines.length < expectedLines + 2) return null;
+            lines = lines.slice(1, 1 + expectedLines);
+            // For each, remove ':' at start, first 8 chars, last 2 chars
+            let segments = [];
+            for (let line of lines) {
+                if (line.charAt(0) === ':') line = line.substr(1);
+                if (line.length < 10+16) return null; // must be at least that long
+                let middle = line.substr(8, 16); // take next 16 chars
+                segments.push(middle);
+            }
+            return segments.length === expectedLines ? segments : null;
+        }
+
+        function sanitizeInput(input) {
+            return input.trim().replace(/[^\x20-\x7E]/g, '');
+        }
+
+        function validateSerial(serialSuffix) {
+            return serialSuffix.length === 16;
+        }
+
+        function generateQRCode() {
+            const RS = String.fromCharCode(30);
+            const GS = String.fromCharCode(29);
+            const EOT = String.fromCharCode(4);
+            const prefix = '[)>' + RS + '06' + GS + '1T';
+            const userSerialPart = document.getElementById('serialNumberInput').value.trim();
+            //const isLion = document.getElementById('engineToggle').checked; COMENTADO PARA OCULTAR PANTHER
+			const isLion = true;
+            let faFbSelection = "";
+            if(isLion) {
+                faFbSelection = document.getElementById('faFbSelect').value;
+            }
+            // Parse textarea input
+            //const expectedSegments = isLion ? 6 : 4;COMENTADO PARA OCULTAR PANTHER
+			const expectedSegments = 6;
+            const rawSegments = document.getElementById('segmentInput').value;
+            let segmentArr = parseSegments(rawSegments, expectedSegments);
+            if (!segmentArr) {
+                alert(`Could not parse ${expectedSegments} segments of 16 characters each from the provided data.`);
+                return;
+            }
+            if (!validateSerial(userSerialPart)) {
+                alert("Serial number suffix should be exactly 16 characters.");
+                return;
+            }
+            // Join segments as single string
+            let segmentsData = segmentArr.map(sanitizeInput).join('');
+            // Prepare full DM string
+            let faFbPortion = isLion ? ` ${faFbSelection}` : '';
+			let qrData = `${prefix}${userSerialPart}      RB3Q 6007${faFbPortion}    ${GS}9SIQA.V6.1${GS}12Z${segmentsData}${RS}${EOT}`;
+			// DEBUG: Show char codes at the end
+			let endChars = qrData.slice(-2).split('').map(ch => ch.charCodeAt(0));
+			console.log('QR End char codes:', endChars); // should show [30, 4]
+			console.log('Full QR Data (char codes):', Array.from(qrData).map(ch => ch.charCodeAt(0)));
+            const qrCodeResult = document.getElementById('qrCodeResult');
+            qrCodeResult.innerHTML = '';
+            const canvas = document.createElement('canvas');
+            qrCodeResult.appendChild(canvas);
+            try {
+                bwipjs.toCanvas(canvas, {
+                    bcid : 'datamatrix',
+                    text : qrData,
+                    encoding : 'c40',
+                    rows : 52,
+                    columns : 52,
+                    ecc : 'ecc200',
+                    parse : false,
+                    macro : false,
+                    scale    : 5,
+                    padding  : 5
+                });
+            } catch(e) {
+                alert(`Error in generating Data Matrix: ${e.message}`);
+            }
+        }
+        toggleEngineInputs();
+    </script>
+</body>
+</html>
