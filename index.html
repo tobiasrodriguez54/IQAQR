@@ -202,23 +202,28 @@
 	    // Ensure visibility (optional if you're hiding/showing the wrapper)
 	    document.getElementById('engineCodeWrapper').style.display = '';
 	}        
-        function parseSegments(rawText, expectedLines) {
-            // Split lines and trim each
-            let lines = rawText.split('\n').map(line => line.trim()).filter(line => line);
-            // Remove first/last
-            if (lines.length < expectedLines + 2) return null;
-            lines = lines.slice(1, 1 + expectedLines);
-            // For each, remove ':' at start, first 8 chars, last 2 chars
-            let segments = [];
-            for (let line of lines) {
-                if (line.charAt(0) === ':') line = line.substr(1);
-                if (line.length < 10+16) return null; // must be at least that long
-                let middle = line.substr(8, 16); // take next 16 chars
-                segments.push(middle);
-            }
-            return segments.length === expectedLines ? segments : null;
-        }
-
+	function parseSegments(rawText, expectedLines) {
+	    let lines = rawText.split('\n').map(line => line.trim()).filter(line => line);
+	    // Must have at least 2 lines: header and footer
+	    if (lines.length < 2) return null;
+	
+	    // Number of middle lines (excluding first and last)
+	    const middleLinesCount = lines.length - 2;
+	
+	    if (middleLinesCount !== expectedLines) return null;
+	
+	    // Slice out exactly expected lines between first and last
+	    let segments = [];
+	    let segmentLines = lines.slice(1, 1 + expectedLines);
+	
+	    for (let line of segmentLines) {
+	        if (line.charAt(0) === ':') line = line.substr(1);
+	        if (line.length < 10 + 16) return null;
+	        let middle = line.substr(8, 16);
+	        segments.push(middle);
+	    }
+	    return segments.length === expectedLines ? segments : null;
+	}
         function sanitizeInput(input) {
             return input.trim().replace(/[^\x20-\x7E]/g, '');
         }
@@ -236,7 +241,6 @@
 	    const userSerialPart = document.getElementById('serialNumberInput').value.trim();
 	    const isLion = document.getElementById('engineToggle').checked;
 	    const engineCode = document.getElementById('engineCodeSelect').value;
-	
 	    const expectedSegments = isLion ? 6 : 4;
 	    const rawSegments = document.getElementById('segmentInput').value;
 	    let segmentArr = parseSegments(rawSegments, expectedSegments);
