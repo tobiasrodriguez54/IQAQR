@@ -227,59 +227,58 @@
             return serialSuffix.length === 16;
         }
 
-        function generateQRCode() {
-            const RS = String.fromCharCode(30);
-            const GS = String.fromCharCode(29);
-            const EOT = String.fromCharCode(4);
-            const prefix = '[)>' + RS + '06' + GS + '1T';
-            const userSerialPart = document.getElementById('serialNumberInput').value.trim();
-            //const isLion = document.getElementById('engineToggle').checked; COMENTADO PARA OCULTAR PANTHER
-			const isLion = true;
-            const engineCode = document.getElementById('engineCodeSelect').value;
-            }
-            // Parse textarea input
-            //const expectedSegments = isLion ? 6 : 4;COMENTADO PARA OCULTAR PANTHER
-			const expectedSegments = 6;
-            const rawSegments = document.getElementById('segmentInput').value;
-            let segmentArr = parseSegments(rawSegments, expectedSegments);
-            if (!segmentArr) {
-                alert(`Could not parse ${expectedSegments} segments of 16 characters each from the provided data.`);
-                return;
-            }
-            if (!validateSerial(userSerialPart)) {
-                alert("Serial number suffix should be exactly 16 characters.");
-                return;
-            }
-            // Join segments as single string
-            let segmentsData = segmentArr.map(sanitizeInput).join('');
-            // Prepare full DM string
-            let faFbPortion = isLion ? ` ${engineCode}` : ` ${engineCode}`;
-			let qrData = `${prefix}${userSerialPart}      RB3Q 6007${faFbPortion}    ${GS}9SIQA.V6.1${GS}12Z${segmentsData}${RS}${EOT}`;
-			// DEBUG: Show char codes at the end
-			let endChars = qrData.slice(-2).split('').map(ch => ch.charCodeAt(0));
-			console.log('QR End char codes:', endChars); // should show [30, 4]
-			console.log('Full QR Data (char codes):', Array.from(qrData).map(ch => ch.charCodeAt(0)));
-            const qrCodeResult = document.getElementById('qrCodeResult');
-            qrCodeResult.innerHTML = '';
-            const canvas = document.createElement('canvas');
-            qrCodeResult.appendChild(canvas);
-            try {
-                bwipjs.toCanvas(canvas, {
-                    bcid : 'datamatrix',
-                    text : qrData,
-                    encoding : 'c40',
-                    rows : 52,
-                    columns : 52,
-                    ecc : 'ecc200',
-                    parse : false,
-                    macro : false,
-                    scale    : 5,
-                    padding  : 5
-                });
-            } catch(e) {
-                alert(`Error in generating Data Matrix: ${e.message}`);
-            }
-        }
+	function generateQRCode() {
+	    const RS = String.fromCharCode(30);
+	    const GS = String.fromCharCode(29);
+	    const EOT = String.fromCharCode(4);
+	    const prefix = '[)>' + RS + '06' + GS + '1T';
+	
+	    const userSerialPart = document.getElementById('serialNumberInput').value.trim();
+	    const isLion = document.getElementById('engineToggle').checked;
+	    const engineCode = document.getElementById('engineCodeSelect').value;
+	
+	    const expectedSegments = isLion ? 6 : 4;
+	    const rawSegments = document.getElementById('segmentInput').value;
+	    let segmentArr = parseSegments(rawSegments, expectedSegments);
+	    if (!segmentArr) {
+	        alert(`Could not parse ${expectedSegments} segments of 16 characters each from the provided data.`);
+	        return;
+	    }
+	    if (!validateSerial(userSerialPart)) {
+	        alert("Serial number suffix should be exactly 16 characters.");
+	        return;
+	    }
+	
+	    let segmentsData = segmentArr.map(sanitizeInput).join('');
+	    let faFbPortion = ` ${engineCode}`;
+	
+	    let qrData = `${prefix}${userSerialPart}      RB3Q 6007${faFbPortion}    ${GS}9SIQA.V6.1${GS}12Z${segmentsData}${RS}${EOT}`;
+	
+	    console.log('QR End char codes:', qrData.slice(-2).split('').map(ch => ch.charCodeAt(0))); // should show [30, 4]
+	    console.log('Full QR Data (char codes):', Array.from(qrData).map(ch => ch.charCodeAt(0)));
+	
+	    const qrCodeResult = document.getElementById('qrCodeResult');
+	    qrCodeResult.innerHTML = '';
+	    const canvas = document.createElement('canvas');
+	    qrCodeResult.appendChild(canvas);
+	
+	    try {
+	        bwipjs.toCanvas(canvas, {
+	            bcid: 'datamatrix',
+	            text: qrData,
+	            encoding: 'c40',
+	            rows: 52,
+	            columns: 52,
+	            ecc: 'ecc200',
+	            parse: false,
+	            macro: false,
+	            scale: 5,
+	            padding: 5
+	        });
+	    } catch (e) {
+	        alert(`Error in generating Data Matrix: ${e.message}`);
+	    }
+	}
         toggleEngineInputs();
     </script>
 </body>
