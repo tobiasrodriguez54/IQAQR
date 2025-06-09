@@ -7,37 +7,144 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bwip-js/dist/bwip-js-min.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 0; background-color: #00274d; color: #fff;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh;
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #00274d;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+    }
+    .container {
+        width: 90%;
+        max-width: 600px;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    h1 {
+        text-align: center;
+        color: #00274d;
+    }
+    input,
+    button,
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    textarea {
+        resize: vertical;
+    }
+    input:focus,
+    textarea:focus {
+        border-color: #007bff;
+        outline: none;
+    }
+    button {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        border: none;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    .toggle-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    .toggle-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #00274d;
+    }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+    }
+    .switch input {
+        display: none;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 20px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #007bff;
+    }
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+    .hidden {
+        display: none;
+    }
+    .input-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .input-group span {
+        white-space: nowrap;
+    }
+    .input-group input {
+        flex: 1 1 auto;
+    }
+    @media (max-width: 480px) {
+        .input-group {
+            flex-direction: column;
+            align-items: stretch;
         }
-        .container {
-            width: 90%; max-width: 600px; background: #fff; padding: 20px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 20px; color: #333;
-        }
-        h1 { text-align: center; color: #00274d; }
-        input, button, textarea {
+        .input-group span,
+        .input-group select {
             width: 100%;
-            padding: 10px; margin: 10px 0;
-            border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;
-            transition: all 0.3s ease;
+            text-align: center;
         }
-        textarea {resize: vertical;}
-        input:focus, textarea:focus { border-color: #007bff; outline: none; }
-        button { background-color: #007bff; color: white; cursor: pointer; border: none; transition: background-color 0.3s; }
-        button:hover { background-color: #0056b3; }
-        .toggle-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .toggle-group { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #00274d; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { display:none; }
-        .slider { position: absolute; cursor: pointer; top:0;left:0;right:0;bottom:0; background-color:#ccc; transition:.4s; border-radius:20px; }
-        .slider:before { position:absolute; content:""; height:16px;width:16px;left:2px;bottom:2px; background-color:white; transition:.4s; border-radius:50%; }
-        input:checked + .slider { background-color:#007bff; }
-        input:checked + .slider:before { transform:translateX(20px); }
-        .hidden { display: none; }
-    </style>
+    }
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
 </head>
 <body>
     <div class="container">
@@ -54,19 +161,18 @@
             </div>
         </div>
         <div id="qrSection">
-            <div style="display: flex; align-items: center;">
-                <span>[)>&#x1e;06&#x1d;1T</span>
-                <input type="text" id="serialNumberInput" 
-                       placeholder="Enter serial number suffix (16 characters)"
-                       maxlength="16" style="flex: 1; margin-bottom:10px;"/>
-                <span id="faFbWrapper" style="margin-left: 10px;">
-                    <select id="faFbSelect">
-                        <option value="FA">FA</option>
-                        <option value="FB" selected>FB</option>
-                    </select>
-                </span>
-                <br>
-            </div>
+		<div class="input-group">
+		    <span>[)>&#x1e;06&#x1d;1T</span>
+		    <input type="text" id="serialNumberInput" 
+		           placeholder="Enter serial number suffix (16 characters)"
+		           maxlength="16"/>
+		    <span id="faFbWrapper">
+		        <select id="faFbSelect">
+		            <option value="FA">FA</option>
+		            <option value="FB" selected>FB</option>
+		        </select>
+		    </span>
+		</div>
             <textarea id="segmentInput" rows="10" placeholder="Paste segment data here"></textarea>
             <button onclick="generateQRCode()">Generate Data Matrix</button>
             <div id="qrCodeResult" style="margin-top:15px;"></div>
