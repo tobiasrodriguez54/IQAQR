@@ -164,12 +164,11 @@
 		    <input type="text" id="serialNumberInput" 
 		           placeholder="Enter serial number suffix (16 characters)"
 		           maxlength="16"/>
-		    <span id="faFbWrapper">
-		        <select id="faFbSelect">
-		            <option value="FA">FA</option>
-		            <option value="FB" selected>FB</option>
-		        </select>
-		    </span>
+		    <span id="engineCodeWrapper">
+			    <select id="engineCodeSelect">
+			        <!-- Options will be updated dynamically -->
+			    </select>
+			</span>
 		</div>
             <textarea id="segmentInput" rows="10" placeholder="Paste segment data here"></textarea>
             <button onclick="generateQRCode()">Generate Data Matrix</button>
@@ -178,10 +177,31 @@
     </div>
     <script>
         function toggleEngineInputs() {
-            const isLion = document.getElementById('engineToggle').checked;
-            document.getElementById('faFbWrapper').style.display = isLion ? '' : 'none';
-        }
-        
+	    const isLion = document.getElementById('engineToggle').checked;
+	    const select = document.getElementById('engineCodeSelect');
+	
+	    // Clear previous options
+	    select.innerHTML = '';
+	
+	    if (isLion) {
+	        ['FA', 'FB'].forEach(code => {
+	            const option = document.createElement('option');
+	            option.value = code;
+	            option.text = code;
+	            select.appendChild(option);
+	        });
+	    } else {
+	        ['ARA', 'AMA', 'ANA', 'CB', 'DB', 'LB', 'MB'].forEach(code => {
+	            const option = document.createElement('option');
+	            option.value = code;
+	            option.text = code;
+	            select.appendChild(option);
+	        });
+	    }
+	
+	    // Ensure visibility (optional if you're hiding/showing the wrapper)
+	    document.getElementById('engineCodeWrapper').style.display = '';
+	}        
         function parseSegments(rawText, expectedLines) {
             // Split lines and trim each
             let lines = rawText.split('\n').map(line => line.trim()).filter(line => line);
@@ -215,9 +235,7 @@
             const userSerialPart = document.getElementById('serialNumberInput').value.trim();
             //const isLion = document.getElementById('engineToggle').checked; COMENTADO PARA OCULTAR PANTHER
 			const isLion = true;
-            let faFbSelection = "";
-            if(isLion) {
-                faFbSelection = document.getElementById('faFbSelect').value;
+            const engineCode = document.getElementById('engineCodeSelect').value;
             }
             // Parse textarea input
             //const expectedSegments = isLion ? 6 : 4;COMENTADO PARA OCULTAR PANTHER
@@ -235,7 +253,7 @@
             // Join segments as single string
             let segmentsData = segmentArr.map(sanitizeInput).join('');
             // Prepare full DM string
-            let faFbPortion = isLion ? ` ${faFbSelection}` : '';
+            let faFbPortion = isLion ? ` ${engineCode}` : ` ${engineCode}`;
 			let qrData = `${prefix}${userSerialPart}      RB3Q 6007${faFbPortion}    ${GS}9SIQA.V6.1${GS}12Z${segmentsData}${RS}${EOT}`;
 			// DEBUG: Show char codes at the end
 			let endChars = qrData.slice(-2).split('').map(ch => ch.charCodeAt(0));
